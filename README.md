@@ -1,6 +1,17 @@
 # rtl-chat-zcode
 
-RTL (right-to-left) chat patch for **ZCode Desktop** — makes Persian/Arabic messages display right-aligned, while English stays left-aligned.
+RTL (right-to-left) chat patch for **ZCode Desktop** — Persian/Arabic text displays right-aligned with the Vazirmatn font, while English and code stay left-aligned.
+
+## Features (v0.4.0)
+
+- **Any-RTL detection** — any Persian/Arabic character in a text block makes that block RTL; English, digits-only text and code stay LTR
+- **App-wide** — chat, sidebar, task lists and dialogs, decided per text block (containers and app chrome stay LTR)
+- **Vazirmatn font** embedded as base64 (fully offline, no CDN) for RTL text; code keeps monospace
+- **Persistent on/off toggle** in the composer toolbar (floating fallback), remembered across restarts
+- **Live re-direction** while messages stream (throttled MutationObserver, ~120 ms)
+- **AskUserQuestion panels** follow the question/answer language
+- **One-click install & uninstall** — `install-rtl.bat` / `uninstall-rtl.bat`
+- Code blocks, tables, math and diffs are never flipped
 
 > **Note:** This is a community-made patch. It modifies ZCode's internal `app.asar` file to auto-load a small browser extension. NOT affiliated with ZCode. Re-apply after every ZCode update.
 
@@ -14,6 +25,10 @@ Double-click **`install-rtl.bat`**. It does everything automatically:
 4. applies the patch and tells you when to reopen ZCode.
 
 Requires [Node.js](https://nodejs.org). After every ZCode update, double-click the same file again.
+
+To remove the patch completely, double-click **`uninstall-rtl.bat`** — it closes ZCode and restores the original `app.asar` from the backup.
+
+While ZCode is open, the **RTL toggle** button in the composer toolbar switches right-to-left rendering on/off; the choice is remembered across restarts.
 
 ## Quick install (Windows, PowerShell)
 
@@ -56,11 +71,17 @@ After every ZCode update, repeat steps 2–6.
 
 اگر تا حالا با ZCode فارسی تایپ کردهاید و متنها برعکس چیده میشوند، این پکیج همان مشکل را درست میکند.
 
-**نسخه:** 0.2.3
+**نسخه:** 0.4.0
 **سیستمعامل:** ویندوز (روی هر دو نصبِ `C:\Program Files\ZCode` و نصبِ کاربری `AppData\Local\Programs\ZCode` آزموده شده)
 **پیشنیاز:**
 - نصب بودن [Node.js](https://nodejs.org) (موقع نصب، تیکهای پیشفرض را نگه دارید)
 - همه دستورهای این آموزش برای **Windows PowerShell** است (ترمینال آبی ویندوز). اگر CMD باز کنید، بعضی دستورها فرق دارند.
+
+---
+
+## نصب آسان (پیشنهادی)
+
+فقط **`install-rtl.bat`** را دابلکلیک کنید: خودش ZCode را پیدا میکند، اگر باز باشد میبندد، فقط برای نصبهای Program Files یک کلیک UAC میگیرد و پچ را میزند. برای حذف کامل هم **`uninstall-rtl.bat`** را دابلکلیک کنید. بقیه این آموزش روش دستی PowerShell است.
 
 ---
 
@@ -82,6 +103,8 @@ After every ZCode update, repeat steps 2–6.
 | `extension/rtl-chat.js` | کد اصلی راستچین (همین داخل صفحه اجرا میشود) |
 | `rtl-chat.js` | **نسخه منبع** — اگر خواستید کد را ویرایش کنید، این را عوض کنید و بعد در `extension\rtl-chat.js` کپی کنید |
 | `asar-work/patch-asar.mjs` | اسکریپت پچ کردن `app.asar` (فاز اصلی نصب) |
+| `install-rtl.bat` | نصب با دابلکلیک: پیدا کردن ZCode، بستن آن، UAC فقط در صورت نیاز، پچ |
+| `uninstall-rtl.bat` | حذف با دابلکلیک: برگرداندن `app.asar` از بکاپ |
 | `verify-no-inject.mjs` | فقط **خواندن** وضعیت — برای مطمئن شدن که پچ کار میکند |
 | `start-zcode-rtl.bat` | راه اضطراری/قدیمی: باز کردن ZCode با فلگ + تزریق دستی (اگر پچ جواب نداد) |
 | `inject-cdp.mjs` | تزریق دستی از راه پورت دیباگ (همراه bat) |
@@ -189,8 +212,10 @@ $env:ZCODE_ASAR = "C:\Program Files\ZCode\resources\app.asar"; node asar-work\pa
 1. چند ثانیه صبر کنید.
 2. در **گوشه پایین-راست** پنجره ZCode باید یک برچسب قرمز کوچک **RTL** ببینید.
 3. یک پیام فارسی بفرستید: باید **راستچین** باشد و حباب پیام شما سمت **راست** بماند.
-4. یک پیام انگلیسی بفرستید: باید **چپچین** بماند (جهت از **اولین کلمه** تشخیص داده میشود).
+4. یک پیام انگلیسی بفرستید: باید **چپچین** بماند (اگر حتی یک حرف فارسی/عربی در متن باشد، آن بلوک راستچین میشود).
 5. کد، جدول و ریاضیات همچنان چپچین و مرتب میمانند.
+6. متن فارسی با فونت **وزیرمتن** نمایش داده میشود.
+7. دکمه **RTL** در نوار ابزار کامپوزر، راستچین را خاموش/روشن میکند و انتخابش ذخیره میماند.
 
 **تمام.** از این به بعد هر بار فقط ZCode را عادی باز کنید.
 
@@ -233,6 +258,10 @@ node verify-no-inject.mjs
 
 هر وقت بعد از آپدیت برچسب RTL ناپدید شد:
 
+**راه آسان:** همان **`install-rtl.bat`** را دابلکلیک کنید (خودش ZCode را میبندد و پچ را دوباره میزند).
+
+راه دستی:
+
 1. ZCode را کامل ببندید.
 2. ترمینال PowerShell را در پوشه پچ باز کنید (قدم ۳ و ۴) و همان دستور قدم ۶ را دوباره بزنید:
 
@@ -271,6 +300,10 @@ node inject-cdp.mjs --verify
 ## بازگردانی به حالت قبل از پچ
 
 اگر خواستید همهچیز را مثل اول کنید:
+
+**راه آسان:** **`uninstall-rtl.bat`** را دابلکلیک کنید — خودش ZCode را میبندد، اگر لازم بود UAC میگیرد و بکاپ را برمیگرداند.
+
+راه دستی:
 
 1. ZCode را کامل ببندید.
 2. در پوشه پچ (Admin اگر نصب Program Files است):
@@ -318,6 +351,8 @@ node --check rtl-chat.js
 | CDP جواب نمیدهد | مطمئن شوید با `--remote-debugging-port=9229` باز شده (بخش تأیید). |
 | چت هنوز چپچین است | بررسی: `node verify-no-inject.mjs` → آیا `badge=true` است؟ |
 | پوشه را جابجا کردم و خراب شد | دوباره قدم ۶ را بزنید (مسیر extension نسبی است و باید خودش پیدا کند). |
+| راستچین ناگهان خاموش شد | دکمه RTL در نوار ابزار کامپوزر را بزنید — حالت off در localStorage ذخیره شده است. |
+| متن فارسی فونت پیشفرض دارد | نسخه قدیمی افزونه لود شده؛ فایلهای `extension/` را بهروز کنید و ZCode را ریاستارت کنید (وزیرمتن از 0.3.0 به بعد). |
 
 ---
 
@@ -332,8 +367,8 @@ node --check rtl-chat.js
 
 ## خلاصه یک خطی
 
-**ببند → PowerShell: `cd "پوشه پچ"` → پچ بزن (`$env:ZCODE_ASAR=...; node asar-work\patch-asar.mjs --apply`) → عادی باز کن → دنبال برچسب قرمز RTL بگرد.**
+**دابلکلیک `install-rtl.bat` → (یک کلیک UAC اگر لازم بود) → ZCode را عادی باز کن → برچسب قرمز RTL + دکمه خاموش/روشن در نوار ابزار کامپوزر.**
 
-بعد از هر آپدیت ZCode، همان یک خط پچ را دوباره بزن.
+بعد از هر آپدیت ZCode، همان دابلکلیک کافی است. برای حذف کامل: `uninstall-rtl.bat`.
 
 </details>
